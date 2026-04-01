@@ -18,16 +18,21 @@ view = st.sidebar.selectbox("Go to:", ["Control Center (Scorecard)", "Interactiv
 API_URL = "http://localhost:8000/api"
 res = {}
 try:
-    response = requests.get(f"{API_URL}/security")
+    response = requests.get(f"{API_URL}/security", timeout=5)
     res = response.json()
-except:
-    st.sidebar.error("⚠️ AI Backend Offline")
+except Exception as e:
+    st.sidebar.error(f"❌ AI Backend Error: {e}")
 
 if view == "Control Center (Scorecard)":
     st.header("🏆 Executive Intelligence Summary")
     
-    # --- UNIVERSAL HEALTH SCORE ---
-    if "health_scores" in res:
+    # --- DEBUG SECTION (Only shown if data is missing) ---
+    if "health_scores" not in res:
+        st.warning("⚠️ Data Sync Issue: Backend did not return Health Scores.")
+        with st.expander("🔍 Debug: See Raw Backend Response"):
+            st.write(res)
+    else:
+        # --- UNIVERSAL HEALTH SCORE ---
         hs = res["health_scores"]
         col1, col2, col3 = st.columns(3)
         col1.metric("🛡️ Security Health", f"{hs['security']}/100")
@@ -39,18 +44,10 @@ if view == "Control Center (Scorecard)":
         st.markdown("---")
         st.subheader("📋 OWASP Top 10 Compliance Scorecard")
         if "owasp_scorecard" in res:
-            scorecard = res["owasp_scorecard"]
-            # Convert to DataFrame for display
-            df_scorecard = pd.DataFrame(list(scorecard.items()), columns=["Category", "Status"])
-            
-            # Color coding for Pass/Fail
+            df_scorecard = pd.DataFrame(list(res["owasp_scorecard"].items()), columns=["Category", "Status"])
             def color_status(val):
-                color = 'green' if val == 'PASS' else 'red'
-                return f'color: {color}; font-weight: bold'
-            
+                return 'color: green; font-weight: bold' if val == 'PASS' else 'color: red; font-weight: bold'
             st.table(df_scorecard.style.map(color_status, subset=['Status']))
-    else:
-        st.warning("⚠️ No intelligence data available. Please run a security scan.")
 
 elif view == "Interactive Code Review":
     st.header("🔍 Security & Performance Code Review")
