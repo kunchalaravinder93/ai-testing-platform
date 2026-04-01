@@ -91,7 +91,7 @@ def prioritize_vulnerabilities(sast_file):
             # Map rule to Category/OWASP
             vuln_type = "generic"
             for key in FIX_KB:
-                if key in check_id.lower():
+                if key.lower() in check_id.lower():
                     vuln_type = key
                     owasp_id = FIX_KB[key].get("owasp", "N/A")
                     # Professional Logic: Fail if Medium or above
