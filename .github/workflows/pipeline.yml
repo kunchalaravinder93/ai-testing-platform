@@ -52,13 +52,16 @@ jobs:
         run: |
           echo "Syncing findings to EC2 Dashboard..."
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          printf "%s\n" "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
           
-          # Create target directories on EC2 before copying
-          ssh -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "mkdir -p /home/ubuntu/ai-testing-platform/data /home/ubuntu/ai-testing-platform/reports"
+          echo "Checking directory on EC2..."
+          ssh -v -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "mkdir -p /home/ubuntu/ai-testing-platform/data /home/ubuntu/ai-testing-platform/reports"
           
-          # Copy files
-          scp -i ~/.ssh/id_rsa -r data/results.jtl $EC2_USER@$EC2_HOST:/home/ubuntu/ai-testing-platform/data/
-          scp -i ~/.ssh/id_rsa -r reports/zap_report.json $EC2_USER@$EC2_HOST:/home/ubuntu/ai-testing-platform/reports/
+          echo "Copying performance results..."
+          scp -v -i ~/.ssh/id_rsa data/results.jtl $EC2_USER@$EC2_HOST:/home/ubuntu/ai-testing-platform/data/
+          
+          echo "Copying security results..."
+          scp -v -i ~/.ssh/id_rsa reports/zap_report.json $EC2_USER@$EC2_HOST:/home/ubuntu/ai-testing-platform/reports/
+          echo "✅ Sync Complete!"
