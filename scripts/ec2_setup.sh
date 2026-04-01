@@ -29,19 +29,27 @@ mkdir -p data reports
 touch data/results.jtl reports/zap_report.json
 
 # 6. Set up Nginx Reverse Proxy
-# This points Port 80 to Streamlit (8501)
-echo "🌐 Configuring Nginx..."
+# This points Port 80 to Streamlit (8501) with WebSocket support
+echo "🌐 Configuring Nginx with WebSocket support..."
 sudo rm -f /etc/nginx/sites-enabled/default
 cat <<EOF | sudo tee /etc/nginx/sites-available/ai-platform
 server {
     listen 80;
+
     location / {
         proxy_pass http://127.0.0.1:8501;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
+        proxy_read_timeout 86400;
     }
+
     location /api {
         proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
     }
 }
 EOF
