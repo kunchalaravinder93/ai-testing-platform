@@ -1,5 +1,9 @@
-from .scanner_parsers import SecurityParser
+try:
+    from .scanner_parsers import SecurityParser
+except ImportError:
+    from scanner_parsers import SecurityParser
 import os
+import sys
 
 def prioritize_vulnerabilities(sast_file, dast_file):
     """
@@ -157,3 +161,12 @@ def prioritize_vulnerabilities(sast_file, dast_file):
         "owasp_scorecard": owasp_scorecard,
         "perf_scorecard": perf_scorecard
     }
+
+if __name__ == "__main__":
+    import sys
+    import json
+    sast = sys.argv[1] if len(sys.argv) > 1 else "reports/scan_results.json"
+    dast = sys.argv[2] if len(sys.argv) > 2 else "reports/zap_report.json"
+    print(f"--- AI Intelligence Audit Starting (SAST: {sast} | DAST: {dast}) ---")
+    results = prioritize_vulnerabilities(sast, dast)
+    print(json.dumps(results, indent=4))
