@@ -1,0 +1,32 @@
+{
+  "@version": "2.14.0",
+  "@generated": "Wed, 1 Apr 2026 10:00:00 GMT",
+  "site": [
+    {
+      "@name": "http://test-app.com",
+      "alerts": [
+        {
+          "alert": "SQL Injection",
+          "riskcode": "3",
+          "confidence": "2",
+          "riskdesc": "High (Medium)",
+          "instances": [{"uri": "/login", "method": "POST", "param": "username"}]
+        },
+        {
+          "alert": "Cross Site Scripting (Reflected)",
+          "riskcode": "3",
+          "confidence": "1",
+          "riskdesc": "High (Low)",
+          "instances": [{"uri": "/search", "method": "GET", "param": "q"}]
+        },
+        {
+          "alert": "Absent Anti-CSRF Tokens",
+          "riskcode": "1",
+          "confidence": "2",
+          "riskdesc": "Low (Medium)",
+          "instances": [{"uri": "/settings", "method": "GET"}]
+        }
+      ]
+    }
+  ]
+}

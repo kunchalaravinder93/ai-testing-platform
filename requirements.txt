@@ -1,0 +1,14 @@
+# AI Engine & Backend
+pandas
+scikit-learn
+fastapi
+uvicorn
+matplotlib
+
+# Dashboard
+streamlit
+requests
+
+# Testing & CI
+pytest
+httpx

@@ -1,0 +1,55 @@
+name: AI Testing Intelligence Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  intelligence-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas scikit-learn
+
+      - name: Run Performance Test (JMeter Mock)
+        run: |
+          # In a real scenario, you'd run: jmeter -n -t jmeter/test-plan.jmx -l data/results.jtl
+          # For this demo, we use the pre-synced mock data in the repo.
+          echo "Simulating JMeter Load Test..."
+          ls -l data/results.jtl
+
+      - name: Run Security Scan (OWASP ZAP Mock)
+        run: |
+          # In a real scenario, you'd run: zap-cli quick-scan --self-contained http://target-url.com
+          echo "Simulating OWASP ZAP Security Scan..."
+          ls -l reports/zap_report.json
+
+      - name: Run AI Engine Analysis
+        run: |
+          python ai_engine/anomaly.py
+          python ai_engine/prediction.py
+          python ai_engine/vuln_prioritizer.py
+
+      - name: Transfer Insights to EC2
+        if: success()
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ubuntu
+        run: |
+          # This step pushes the data folder to EC2
+          echo "Syncing findings to EC2 Dashboard..."
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          scp -r data/ reports/ $EC2_USER@$EC2_HOST:/home/ubuntu/ai-testing-platform/
