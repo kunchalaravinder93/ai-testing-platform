@@ -56,11 +56,11 @@ if view == "Performance Dashboard":
         st.markdown("---")
         st.subheader("⚡ AI Performance Code Review")
         try:
-            res = requests.get(f"{API_URL}/security").json() # Using the same security endpoint but filtering
+            res = requests.get(f"{API_URL}/security").json()
             perf_alerts = [a for a in res.get("prioritized_alerts", []) if a.get("category") == "PERFORMANCE"]
             
             if not perf_alerts:
-                st.info("No performance bottlenecks detected in the source code. Optimization level: High.")
+                st.info("No performance bottlenecks detected. Optimization level: High.")
             else:
                 for row in perf_alerts:
                     with st.expander(f"⚡ {row['priority']}: {row['alert']}"):
@@ -76,8 +76,8 @@ if view == "Performance Dashboard":
                         with col2:
                             st.success("✅ Optimized Fix")
                             st.code(row.get('fixed_code', '// Suggested optimization'), language='javascript')
-        except:
-            st.info("💡 Backend not running - showing limited view.")
+        except Exception as e:
+            st.error(f"⚠️ Display Error (Perf): {e}")
 
 elif view == "Security Analysis":
     st.header("🔐 AI SAST Intelligence (Static Analysis)")
@@ -110,13 +110,13 @@ elif view == "Security Analysis":
                 # Summary Table (Filtered)
                 st.markdown("---")
                 st.subheader("📁 Security Vulnerability Summary")
-                sec_df = pd.DataFrame(sec_alerts)
-                if not sec_df.empty:
-                    st.dataframe(sec_df[["alert", "priority", "file", "score"]].style.map(highlight_priority, subset=['priority']))
+                if sec_alerts:
+                    sec_df = pd.DataFrame(sec_alerts)
+                    st.dataframe(sec_df[["alert", "priority", "file", "score"]])
             else:
                 st.info("No prioritized alerts available yet.")
-        except:
-            st.info("💡 Backend not running - showing limited view.")
+        except Exception as e:
+            st.error(f"⚠️ Display Error: {e}")
 
 elif view == "Predictive Failure":
     st.header("🔮 Predictive Performance Model")
