@@ -32,15 +32,15 @@ jobs:
       - name: Run SAST Security Scan (Semgrep)
         run: |
           echo "Running Semgrep Scan..."
-          semgrep scan --config auto --json --output reports/real_report.json || true
+          # Run real scan to a temp file
+          semgrep scan --config auto --json --output reports/scan_results.json || true
           
-          # Hybrid Demo Mode: Check if we have mock data to show
-          if [ -f "reports/sast_report.json" ]; then
-            echo "Injecting Juice Shop Demo Intelligence..."
-            # For the demo, we'll use our pre-designed report which has the AI fixes
-            cp reports/sast_report.json reports/sast_report.json 
+          # Hybrid Demo Mode: If the mock file exists, we'll keep using it for the presentation.
+          # If it doesn't exist, we'll use the real scan results.
+          if [ ! -f "reports/sast_report.json" ]; then
+            mv reports/scan_results.json reports/sast_report.json
           else
-            mv reports/real_report.json reports/sast_report.json
+            echo "✅ Real scan finished. Keeping Juice Shop Demo Intelligence for display."
           fi
 
       - name: Run AI Engine Analysis
