@@ -22,20 +22,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas scikit-learn
+          pip install pandas scikit-learn semgrep
 
       - name: Run Performance Test (JMeter Mock)
         run: |
-          # In a real scenario, you'd run: jmeter -n -t jmeter/test-plan.jmx -l data/results.jtl
-          # For this demo, we use the pre-synced mock data in the repo.
           echo "Simulating JMeter Load Test..."
           ls -l data/results.jtl
 
-      - name: Run Security Scan (OWASP ZAP Mock)
+      - name: Run SAST Security Scan (Semgrep)
         run: |
-          # In a real scenario, you'd run: zap-cli quick-scan --self-contained http://target-url.com
-          echo "Simulating OWASP ZAP Security Scan..."
-          ls -l reports/zap_report.json
+          echo "Running Semgrep Scan..."
+          # Scan using auto-config for multi-language support
+          semgrep scan --config auto --json --output reports/sast_report.json || true
 
       - name: Run AI Engine Analysis
         run: |

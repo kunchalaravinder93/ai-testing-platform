@@ -53,29 +53,34 @@ if view == "Performance Dashboard":
             st.info("💡 Backend not running - showing limited view.")
 
 elif view == "Security Analysis":
-    st.header("🔐 Security Vulnerabilities")
+    st.header("🔐 AI SAST Intelligence (Static Analysis)")
     
-    if not os.path.exists("reports/zap_report.json"):
-        st.warning("No security report found! Run the GitHub Action pipeline to generate results.")
+    if not os.path.exists("reports/sast_report.json"):
+        st.warning("No SAST report found! Run the GitHub Action pipeline to generate results.")
     else:
         try:
             res = requests.get(f"{API_URL}/security").json()
             if "prioritized_alerts" in res:
-                st.subheader("Vulnerability Prioritization")
+                # Detailed Code Review Expanders
+                st.subheader("🔍 AI Security Code Review")
+                for _, row in alert_df.iterrows():
+                    with st.expander(f"🔴 {row['priority']}: {row['alert']} (CWE: {row['cwe']})"):
+                        st.markdown(f"**File:** `{row['file']}`")
+                        st.markdown(f"**Recommendation:** {row.get('recommendation', 'N/A')}")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.error("⚠️ Vulnerable Code")
+                            st.code(row.get('vulnerable_code', '// No code available'), language='javascript')
+                            
+                        with col2:
+                            st.success("✅ Recommended Fix")
+                            st.code(row.get('fixed_code', '// Review best practices'), language='javascript')
                 
-                # Critical Count Metric
-                crit_count = res.get("critical_count", 0)
-                if crit_count > 0:
-                    st.error(f"🚨 CRITICAL ALERTS: {crit_count}")
-                
-                alert_df = pd.DataFrame(res["prioritized_alerts"])
-                
-                # Color code priority
-                def highlight_priority(val):
-                    color = 'red' if val == 'CRITICAL' else 'orange' if val == 'HIGH' else 'blue'
-                    return f'color: {color}'
-                    
-                st.dataframe(alert_df.style.map(highlight_priority, subset=['priority']))
+                # Summary Table (Optional for overview)
+                st.markdown("---")
+                st.subheader("📁 Vulnerability Summary")
+                st.dataframe(alert_df[["alert", "priority", "file", "score"]].style.map(highlight_priority, subset=['priority']))
             else:
                 st.info("No prioritized alerts available yet.")
         except:

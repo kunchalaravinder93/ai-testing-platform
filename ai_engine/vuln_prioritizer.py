@@ -1,52 +1,92 @@
 import json
 import os
 
-def prioritize_vulnerabilities(zap_file):
+def prioritize_vulnerabilities(sast_file):
     """
-    Parses ZAP JSON report and applies AI logic to prioritize risks.
+    Parses Semgrep SAST JSON report and applies AI logic to prioritize risks
+    and generate fix recommendations.
     """
-    if not os.path.exists(zap_file):
-        return {"error": "ZAP report not found", "prioritized_alerts": []}
+    if not os.path.exists(sast_file):
+        return {"error": "SAST report not found", "prioritized_alerts": []}
 
     try:
-        with open(zap_file, 'r') as f:
+        with open(sast_file, 'r') as f:
             data = json.load(f)
 
-        alerts = data.get('site', [{}])[0].get('alerts', [])
+        results = data.get('results', [])
         prioritized = []
 
-        for alert in alerts:
-            alert_name = alert.get('alert', '')
-            risk_code = int(alert.get('riskcode', '0'))
-            confidence = int(alert.get('confidence', '0'))
+        # Knowledge Base for AI Fix Recommendations
+        FIX_KB = {
+            "sql-injection": {
+                "recommendation": "Use parameterized queries (e.g., MySQL '?', PosgreSQL '$1') instead of template strings.",
+                "fix_code": "db.query('SELECT * FROM Users WHERE email = ? AND password = ?', [req.body.email, req.body.password])"
+            },
+            "xss": {
+                "recommendation": "Use a templating engine with auto-escaping (like EJS or Pug) or sanitize inputs using a library like DOMPurify.",
+                "fix_code": "res.render('search_results', { q: req.query.q });"
+            },
+            "hardcoded-secrets": {
+                "recommendation": "Store secrets in environment variables or a secure Vault. Never hardcode them in source code.",
+                "fix_code": "const JWT_SECRET = process.env.JWT_SECRET_KEY;"
+            }
+        }
+
+        for issue in results:
+            check_id = issue.get('check_id', '')
+            extra = issue.get('extra', {})
+            message = extra.get('message', '')
+            severity = extra.get('severity', 'LOW')
+            lines = extra.get('lines', 'Code snippet not available.')
+            path = issue.get('path', '')
+            line_num = issue.get('start', {}).get('line', 0)
             
-            # AI Logic: Re-score based on alert type and confidence
-            base_score = (risk_code * 30) + (confidence * 10)
+            # AI Logic: Re-score based on severity and pattern
+            score = 0
+            if severity == "ERROR": score += 60
+            elif severity == "WARNING": score += 30
+            else: score += 10
             
-            # Override for critical types
-            if any(critical in alert_name for critical in ["SQL Injection", "Remote Code Execution", "Cross Site Scripting"]):
-                base_score += 50
+            # Identify the vulnerability type for fix generation
+            vuln_type = "generic"
+            for key in FIX_KB:
+                if key in check_id.lower():
+                    vuln_type = key
+                    score += 30  # Found a known high-risk pattern
+                    break
+
+            # Override for critical types (Injection, Hardcoded Secrets)
+            if score >= 80:
                 final_priority = "CRITICAL"
-            elif base_score >= 100:
+            elif score >= 50:
                 final_priority = "HIGH"
-            elif base_score >= 60:
+            elif score >= 20:
                 final_priority = "MEDIUM"
             else:
                 final_priority = "LOW"
 
+            # Get Fix Recommendation
+            fix_info = FIX_KB.get(vuln_type, {
+                "recommendation": "Consult OWASP Top 10 for secure coding best practices.",
+                "fix_code": "// Review security at this line"
+            })
+
             prioritized.append({
-                "alert": alert_name,
+                "alert": message,
                 "priority": final_priority,
-                "score": base_score,
-                "instances": len(alert.get('instances', [])),
-                "solution": alert.get('solution', '')
+                "score": score,
+                "file": f"{path}:{line_num}",
+                "vulnerable_code": lines,
+                "recommendation": fix_info["recommendation"],
+                "fixed_code": fix_info["fix_code"],
+                "cwe": extra.get('metadata', {}).get('cwe', 'N/A')
             })
 
         # Sort by score descending
         prioritized = sorted(prioritized, key=lambda x: x['score'], reverse=True)
         
         return {
-            "total_alerts": len(alerts),
+            "total_alerts": len(results),
             "prioritized_alerts": prioritized,
             "critical_count": sum(1 for a in prioritized if a['priority'] == "CRITICAL")
         }
@@ -54,5 +94,5 @@ def prioritize_vulnerabilities(zap_file):
         return {"error": str(e), "prioritized_alerts": []}
 
 if __name__ == "__main__":
-    results = prioritize_vulnerabilities("reports/zap_report.json")
+    results = prioritize_vulnerabilities("reports/sast_report.json")
     print(results)
