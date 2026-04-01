@@ -35,10 +35,10 @@ chmod +x scripts/ec2_setup.sh
 Launch the services inside `tmux` sessions so they stay running:
 ```bash
 # Start Backend
-tmux new-session -d -s backend 'uvicorn backend.main:app --host 0.0.0.0 --port 8000'
+tmux new-session -d -s backend './venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000'
 
 # Start Dashboard
-tmux new-session -d -s dashboard 'streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0'
+tmux new-session -d -s dashboard './venv/bin/streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0'
 ```
 
 ---
