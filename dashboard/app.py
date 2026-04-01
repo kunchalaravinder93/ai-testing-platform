@@ -16,11 +16,30 @@ view = st.sidebar.selectbox("Go to:", ["Executive Summary", "Performance Dashboa
 
 if view == "Executive Summary":
     st.header("🏆 Executive Intelligence Summary")
+    
+    # --- UNIVERSAL HEALTH SCORE (EXECUTIVE SUMMARY) ---
+    res = {}
+    try:
+        response = requests.get(f"{API_URL}/security")
+        res = response.json()
+    except Exception as e:
+        st.error(f"❌ Could not connect to AI Backend: {e}")
 
-st.title("🚀 AI-Driven Testing Platform")
-st.markdown("---")
+    if "health_scores" in res:
+        hs = res["health_scores"]
+        st.markdown("### 🏆 Universal Health Score")
+        col1, col2, col3 = st.columns(3)
+        col1.metric("🛡️ Security Score", f"{hs['security']}/100")
+        col2.metric("⚡ Performance Score", f"{hs['performance']}/100")
+        col3.metric("🤝 Overall Confidence", hs['confidence'])
+        st.progress(hs['security']/100)
+    elif res:
+        st.warning("⚠️ Health scores are missing. Please ensure you have run a full scan.")
+    
+    st.markdown("---")
+    st.write("Welcome to your **Executive Intelligence Dashboard**. This view summarizes the overall security and performance posture of your application.")
 
-if view == "Performance Dashboard":
+elif view == "Performance Dashboard":
     st.header("⚡ Performance Insights")
     
     # Check if data exists
