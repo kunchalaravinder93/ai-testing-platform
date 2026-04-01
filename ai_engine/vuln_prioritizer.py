@@ -68,6 +68,21 @@ def prioritize_vulnerabilities(sast_file):
                 "fixed_code": "if (ALLOWED_DOMAINS.includes(new URL(req.query.url).hostname)) { axios.get(url); }",
                 "category": "SECURITY", "owasp": "A10:2021 - Server-Side Request Forgery"
             },
+            "Path-Traversal": {
+                "recommendation": "A01:2021 - Sanitize file paths using 'path.basename' or use a safe allow-list for downloads.",
+                "fixed_code": "const safePath = path.join('/var/www/uploads/', path.basename(req.query.file)); res.sendFile(safePath);",
+                "category": "SECURITY", "owasp": "A01:2021 - Broken Access Control"
+            },
+            "Prototype-Pollution": {
+                "recommendation": "A06:2021 - Update to lodash >= 4.17.21 or use safe object merge patterns (Object.create(null)).",
+                "fixed_code": "npm install lodash@latest",
+                "category": "SECURITY", "owasp": "A06:2021 - Vulnerable and Outdated Components"
+            },
+            "CORS": {
+                "recommendation": "A08:2021 - Restrict CORS to specific, trusted domains. Never use '*'.",
+                "fixed_code": "res.header('Access-Control-Allow-Origin', 'https://trusted.app.com');",
+                "category": "SECURITY", "owasp": "A08:2021 - Software and Data Integrity Failures"
+            },
             "n-plus-one": {
                 "recommendation": "Performance - N+1 database problem. Use a single JOIN query instead of multiple queries in a loop.",
                 "fixed_code": "db.query('SELECT p.*, r.* FROM products p LEFT JOIN reviews r ON p.id = r.p_id')",
@@ -166,7 +181,7 @@ def prioritize_vulnerabilities(sast_file):
             "health_scores": {
                 "security": max(0, security_score),
                 "performance": max(0, performance_score),
-                "fidelity": "ESTABLISHED" if len(results) > 10 else "PRELIMINARY"
+                "depth": "High" if len(results) > 40 else "Medium" if len(results) > 10 else "Low"
             },
             "owasp_scorecard": owasp_scorecard,
             "perf_scorecard": perf_scorecard

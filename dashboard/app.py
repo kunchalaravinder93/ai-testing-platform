@@ -37,7 +37,7 @@ if view == "Control Center (Scorecard)":
         col1, col2, col3 = st.columns(3)
         col1.metric("🛡️ Security Health", f"{hs['security']}/100")
         col2.metric("⚡ Performance Health", f"{hs['performance']}/100")
-        col3.metric("🤝 Intelligence Fidelity", hs['fidelity'])
+        col3.metric("🤝 AI Scan Depth", hs['depth'])
         st.progress(hs['security']/100)
         
         # --- COMPLIANCE SCORECARDS ---
@@ -65,6 +65,9 @@ elif view == "Interactive Code Review":
     
     if "prioritized_alerts" in res:
         alerts = res["prioritized_alerts"]
+        
+        # Enterprise Statistic
+        st.metric("📦 Total Enterprise AI Intelligence Findings", len(alerts))
         
         # Filters
         cat = st.radio("Silo:", ["All", "Security", "Performance"], horizontal=True)
