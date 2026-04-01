@@ -52,6 +52,33 @@ if view == "Performance Dashboard":
         except:
             st.info("💡 Backend not running - showing limited view.")
 
+        # Detailed Performance Code Review
+        st.markdown("---")
+        st.subheader("⚡ AI Performance Code Review")
+        try:
+            res = requests.get(f"{API_URL}/security").json() # Using the same security endpoint but filtering
+            perf_alerts = [a for a in res.get("prioritized_alerts", []) if a.get("category") == "PERFORMANCE"]
+            
+            if not perf_alerts:
+                st.info("No performance bottlenecks detected in the source code. Optimization level: High.")
+            else:
+                for row in perf_alerts:
+                    with st.expander(f"⚡ {row['priority']}: {row['alert']}"):
+                        st.markdown(f"**File:** `{row['file']}`")
+                        st.markdown(f"**Impact:** Performance Degradation (CWE: {row['cwe']})")
+                        st.markdown(f"**Optimization:** {row.get('recommendation', 'N/A')}")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.warning("⏱️ Bottleneck Code")
+                            st.code(row.get('vulnerable_code', '// No code available'), language='javascript')
+                            
+                        with col2:
+                            st.success("✅ Optimized Fix")
+                            st.code(row.get('fixed_code', '// Suggested optimization'), language='javascript')
+        except:
+            st.info("💡 Backend not running - showing limited view.")
+
 elif view == "Security Analysis":
     st.header("🔐 AI SAST Intelligence (Static Analysis)")
     
@@ -61,11 +88,12 @@ elif view == "Security Analysis":
         try:
             res = requests.get(f"{API_URL}/security").json()
             if "prioritized_alerts" in res:
+                # Filter for Security Only
+                sec_alerts = [a for a in res["prioritized_alerts"] if a.get("category") == "SECURITY"]
+                
                 # Detailed Code Review Expanders
                 st.subheader("🔍 AI Security Code Review")
-                alert_df = pd.DataFrame(res["prioritized_alerts"])
-                
-                for _, row in alert_df.iterrows():
+                for row in sec_alerts:
                     with st.expander(f"🔴 {row['priority']}: {row['alert']} (CWE: {row['cwe']})"):
                         st.markdown(f"**File:** `{row['file']}`")
                         st.markdown(f"**Recommendation:** {row.get('recommendation', 'N/A')}")
@@ -79,10 +107,12 @@ elif view == "Security Analysis":
                             st.success("✅ Recommended Fix")
                             st.code(row.get('fixed_code', '// Review best practices'), language='javascript')
                 
-                # Summary Table (Optional for overview)
+                # Summary Table (Filtered)
                 st.markdown("---")
-                st.subheader("📁 Vulnerability Summary")
-                st.dataframe(alert_df[["alert", "priority", "file", "score"]].style.map(highlight_priority, subset=['priority']))
+                st.subheader("📁 Security Vulnerability Summary")
+                sec_df = pd.DataFrame(sec_alerts)
+                if not sec_df.empty:
+                    st.dataframe(sec_df[["alert", "priority", "file", "score"]].style.map(highlight_priority, subset=['priority']))
             else:
                 st.info("No prioritized alerts available yet.")
         except:

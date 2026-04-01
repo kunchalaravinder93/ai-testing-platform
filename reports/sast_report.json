@@ -14,27 +14,27 @@
       }
     },
     {
-      "check_id": "javascript.express.security.audit.xss",
-      "path": "routes/search.js",
-      "start": { "line": 15, "col": 10 },
-      "end": { "line": 15, "col": 60 },
+      "check_id": "javascript.express.performance.audit.select-star",
+      "path": "routes/user_profile.js",
+      "start": { "line": 15, "col": 5 },
+      "end": { "line": 15, "col": 40 },
       "extra": {
-        "message": "Unsanitized user input is reflected in the HTML response, leading to XSS.",
+        "message": "Inefficient 'SELECT *' query detects. This can cause high latency on large tables.",
         "severity": "WARNING",
-        "lines": "res.send(`<h1>Search Results for: ${req.query.q}</h1>`);",
-        "metadata": { "cwe": "CWE-79" }
+        "lines": "db.query('SELECT * FROM UserProfile WHERE id = ?', [req.params.id])",
+        "metadata": { "cwe": "CWE-1070" }
       }
     },
     {
-      "check_id": "javascript.express.security.audit.hardcoded-secrets",
-      "path": "config/config.js",
-      "start": { "line": 10, "col": 1 },
-      "end": { "line": 10, "col": 30 },
+      "check_id": "javascript.express.performance.audit.blocking-io",
+      "path": "scripts/report_generator.js",
+      "start": { "line": 42, "col": 10 },
+      "end": { "line": 42, "col": 60 },
       "extra": {
-        "message": "Hardcoded JWT secret key found. This is a severe security risk.",
+        "message": "Synchronous file operation detected (fs.readFileSync). This blocks the Node.js event loop.",
         "severity": "ERROR",
-        "lines": "const JWT_SECRET = 'Juice_Shop_Master_Key_123';",
-        "metadata": { "cwe": "CWE-798" }
+        "lines": "const data = fs.readFileSync('/tmp/report.pdf');",
+        "metadata": { "cwe": "CWE-834" }
       }
     }
   ]

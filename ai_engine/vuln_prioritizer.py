@@ -4,7 +4,7 @@ import os
 def prioritize_vulnerabilities(sast_file):
     """
     Parses Semgrep SAST JSON report and applies AI logic to prioritize risks
-    and generate fix recommendations.
+    and generate fix recommendations for both Security and Performance.
     """
     if not os.path.exists(sast_file):
         return {"error": "SAST report not found", "prioritized_alerts": []}
@@ -16,19 +16,29 @@ def prioritize_vulnerabilities(sast_file):
         results = data.get('results', [])
         prioritized = []
 
-        # Knowledge Base for AI Fix Recommendations
+        # Knowledge Base for AI Fix Recommendations (Security & Performance)
         FIX_KB = {
+            # Security Fixes
             "sql-injection": {
                 "recommendation": "Use parameterized queries (e.g., MySQL '?', PosgreSQL '$1') instead of template strings.",
-                "fix_code": "db.query('SELECT * FROM Users WHERE email = ? AND password = ?', [req.body.email, req.body.password])"
+                "fix_code": "db.query('SELECT * FROM Users WHERE email = ? AND password = ?', [req.body.email, req.body.password])",
+                "category": "SECURITY"
             },
             "xss": {
-                "recommendation": "Use a templating engine with auto-escaping (like EJS or Pug) or sanitize inputs using a library like DOMPurify.",
-                "fix_code": "res.render('search_results', { q: req.query.q });"
+                "recommendation": "Use a templating engine with auto-escaping or sanitize inputs using a library like DOMPurify.",
+                "fix_code": "res.render('search_results', { q: req.query.q });",
+                "category": "SECURITY"
             },
-            "hardcoded-secrets": {
-                "recommendation": "Store secrets in environment variables or a secure Vault. Never hardcode them in source code.",
-                "fix_code": "const JWT_SECRET = process.env.JWT_SECRET_KEY;"
+            # Performance Fixes
+            "select-star": {
+                "recommendation": "Inefficient query. Use specialized column selects to reduce database latency and network bandwidth.",
+                "fix_code": "db.query('SELECT username, email FROM UserProfile WHERE id = ?', [req.params.id])",
+                "category": "PERFORMANCE"
+            },
+            "blocking-io": {
+                "recommendation": "Synchronous file operation detected. Use 'fs.promises' to avoid blocking the event loop.",
+                "fix_code": "const data = await fs.promises.readFile('/tmp/report.pdf');",
+                "category": "PERFORMANCE"
             }
         }
 
@@ -49,13 +59,15 @@ def prioritize_vulnerabilities(sast_file):
             
             # Identify the vulnerability type for fix generation
             vuln_type = "generic"
+            category = "SECURITY" # Default to security
             for key in FIX_KB:
                 if key in check_id.lower():
                     vuln_type = key
                     score += 30  # Found a known high-risk pattern
+                    category = FIX_KB[key]["category"]
                     break
 
-            # Override for critical types (Injection, Hardcoded Secrets)
+            # Override for critical types
             if score >= 80:
                 final_priority = "CRITICAL"
             elif score >= 50:
@@ -67,8 +79,9 @@ def prioritize_vulnerabilities(sast_file):
 
             # Get Fix Recommendation
             fix_info = FIX_KB.get(vuln_type, {
-                "recommendation": "Consult OWASP Top 10 for secure coding best practices.",
-                "fix_code": "// Review security at this line"
+                "recommendation": "Consult OWASP or Performance best practices for this pattern.",
+                "fix_code": "// Review code at this line",
+                "category": "SECURITY"
             })
 
             prioritized.append({
@@ -79,6 +92,7 @@ def prioritize_vulnerabilities(sast_file):
                 "vulnerable_code": lines,
                 "recommendation": fix_info["recommendation"],
                 "fixed_code": fix_info["fix_code"],
+                "category": category,
                 "cwe": extra.get('metadata', {}).get('cwe', 'N/A')
             })
 
