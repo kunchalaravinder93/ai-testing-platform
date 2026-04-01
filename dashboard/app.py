@@ -75,7 +75,7 @@ elif view == "Security Analysis":
                     color = 'red' if val == 'CRITICAL' else 'orange' if val == 'HIGH' else 'blue'
                     return f'color: {color}'
                     
-                st.dataframe(alert_df.style.applymap(highlight_priority, subset=['priority']))
+                st.dataframe(alert_df.style.map(highlight_priority, subset=['priority']))
             else:
                 st.info("No prioritized alerts available yet.")
         except:
