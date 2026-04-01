@@ -96,13 +96,34 @@ def prioritize_vulnerabilities(sast_file):
                 "cwe": extra.get('metadata', {}).get('cwe', 'N/A')
             })
 
-        # Sort by score descending
-        prioritized = sorted(prioritized, key=lambda x: x['score'], reverse=True)
+        # Calculate Health Scores
+        security_score = 100
+        performance_score = 100
+        
+        for a in prioritized:
+            penalty = 20 if a['priority'] == "CRITICAL" else 10 if a['priority'] == "HIGH" else 5
+            if a['category'] == "SECURITY":
+                security_score -= penalty
+            else:
+                performance_score -= penalty
+        
+        # Floor at 0
+        security_score = max(0, security_score)
+        performance_score = max(0, performance_score)
+        
+        # Overall Confidence Logic
+        confidence = "HIGH"
+        if len(results) == 0: confidence = "MEDIUM (Limited Data)"
         
         return {
             "total_alerts": len(results),
             "prioritized_alerts": prioritized,
-            "critical_count": sum(1 for a in prioritized if a['priority'] == "CRITICAL")
+            "critical_count": sum(1 for a in prioritized if a['priority'] == "CRITICAL"),
+            "health_scores": {
+                "security": security_score,
+                "performance": performance_score,
+                "confidence": confidence
+            }
         }
     except Exception as e:
         return {"error": str(e), "prioritized_alerts": []}
