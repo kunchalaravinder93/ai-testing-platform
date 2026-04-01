@@ -2,39 +2,135 @@
   "version": "1.0.0",
   "results": [
     {
-      "check_id": "javascript.express.security.audit.sql-injection",
+      "check_id": "javascript.express.security.audit.A01-broken-access-control",
+      "path": "routes/admin.js",
+      "start": { "line": 12, "col": 1 },
+      "extra": {
+        "message": "A01:2021 - Insecure Direct Object Reference (IDOR). User can access any profile by ID.",
+        "severity": "ERROR",
+        "lines": "const user = db.query(`SELECT * FROM Users WHERE id = ${req.params.id}`)",
+        "metadata": { "cwe": "CWE-639", "owasp": "A01:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A02-cryptographic-failures",
+      "path": "utils/auth.js",
+      "start": { "line": 45, "col": 1 },
+      "extra": {
+        "message": "A02:2021 - Use of weak hashing algorithm (MD5) for passwords.",
+        "severity": "ERROR",
+        "lines": "const hash = crypto.createHash('md5').update(password).digest('hex');",
+        "metadata": { "cwe": "CWE-327", "owasp": "A02:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A03-injection-sqli",
       "path": "routes/login.js",
-      "start": { "line": 24, "col": 5 },
-      "end": { "line": 24, "col": 50 },
+      "start": { "line": 24, "col": 1 },
       "extra": {
-        "message": "User-controlled input is used in a database query, leading to SQL Injection.",
+        "message": "A03:2021 - SQL Injection via template string interpolation.",
         "severity": "ERROR",
-        "lines": "db.query(`SELECT * FROM Users WHERE email = '${req.body.email}' AND password = '${req.body.password}'`)",
-        "metadata": { "cwe": "CWE-89" }
+        "lines": "db.query(`SELECT * FROM Users WHERE email = '${req.body.email}'`)",
+        "metadata": { "cwe": "CWE-89", "owasp": "A03:2021" }
       }
     },
     {
-      "check_id": "javascript.express.performance.audit.select-star",
-      "path": "routes/user_profile.js",
-      "start": { "line": 15, "col": 5 },
-      "end": { "line": 15, "col": 40 },
+      "check_id": "javascript.express.security.audit.A04-insecure-design",
+      "path": "routes/reset.js",
+      "start": { "line": 8, "col": 1 },
       "extra": {
-        "message": "Inefficient 'SELECT *' query detects. This can cause high latency on large tables.",
+        "message": "A04:2021 - Password reset logic uses predictable security questions.",
         "severity": "WARNING",
-        "lines": "db.query('SELECT * FROM UserProfile WHERE id = ?', [req.params.id])",
-        "metadata": { "cwe": "CWE-1070" }
+        "lines": "if (user.security_answer === req.body.answer) { resetPassword(user); }",
+        "metadata": { "cwe": "CWE-640", "owasp": "A04:2021" }
       }
     },
     {
-      "check_id": "javascript.express.performance.audit.blocking-io",
-      "path": "scripts/report_generator.js",
-      "start": { "line": 42, "col": 10 },
-      "end": { "line": 42, "col": 60 },
+      "check_id": "javascript.express.security.audit.A05-security-misconfig",
+      "path": "app.js",
+      "start": { "line": 15, "col": 1 },
       "extra": {
-        "message": "Synchronous file operation detected (fs.readFileSync). This blocks the Node.js event loop.",
+        "message": "A05:2021 - Directory listing enabled in Express static middleware.",
+        "severity": "WARNING",
+        "lines": "app.use(express.static('public', { index: false, redirect: true }));",
+        "metadata": { "cwe": "CWE-548", "owasp": "A05:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A06-vulnerable-components",
+      "path": "package.json",
+      "start": { "line": 22, "col": 1 },
+      "extra": {
+        "message": "A06:2021 - Using outdated version of lodash (4.17.15) with known prototype pollution.",
+        "severity": "WARNING",
+        "lines": "\"lodash\": \"4.17.15\"",
+        "metadata": { "cwe": "CWE-1321", "owasp": "A06:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A07-auth-failures",
+      "path": "routes/login.js",
+      "start": { "line": 50, "col": 1 },
+      "extra": {
+        "message": "A07:2021 - Missing rate limiting on login endpoint. Susceptible to brute force.",
+        "severity": "WARNING",
+        "lines": "app.post('/login', (req, res) => { ... });",
+        "metadata": { "cwe": "CWE-307", "owasp": "A07:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A08-integrity-failures",
+      "path": "utils/updater.js",
+      "start": { "line": 102, "col": 1 },
+      "extra": {
+        "message": "A08:2021 - Software update performed over unencrypted HTTP protocol.",
         "severity": "ERROR",
-        "lines": "const data = fs.readFileSync('/tmp/report.pdf');",
-        "metadata": { "cwe": "CWE-834" }
+        "lines": "http.get('http://updates.juiceshop.com/latest.zip', (res) => { ... });",
+        "metadata": { "cwe": "CWE-494", "owasp": "A08:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A09-logging-failures",
+      "path": "routes/transfer.js",
+      "start": { "line": 34, "col": 1 },
+      "extra": {
+        "message": "A09:2021 - Critical financial transaction performed without security logging.",
+        "severity": "INFO",
+        "lines": "db.execute('UPDATE accounts SET balance = balance - 100 WHERE id = ?', [user_id]);",
+        "metadata": { "cwe": "CWE-778", "owasp": "A09:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.security.audit.A10-ssrf",
+      "path": "routes/proxy.js",
+      "start": { "line": 18, "col": 1 },
+      "extra": {
+        "message": "A10:2021 - Server-Side Request Forgery (SSRF) via user-provided URL.",
+        "severity": "ERROR",
+        "lines": "axios.get(req.query.url).then(response => res.send(response.data));",
+        "metadata": { "cwe": "CWE-918", "owasp": "A10:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.memory-leak",
+      "path": "utils/cache.py",
+      "start": { "line": 110, "col": 1 },
+      "extra": {
+        "message": "Performance - Unbounded cache growth detected. Potential memory leak.",
+        "severity": "ERROR",
+        "lines": "global_cache[req.id] = data # Never cleared",
+        "metadata": { "cwe": "CWE-401", "owasp": "Performance" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.blocking-loop",
+      "path": "utils/processor.js",
+      "start": { "line": 88, "col": 1 },
+      "extra": {
+        "message": "Performance - Synchronous loop over large dataset blocks the event loop.",
+        "severity": "WARNING",
+        "lines": "data.forEach(item => { heavySyncProcess(item); });",
+        "metadata": { "cwe": "CWE-834", "owasp": "Performance" }
       }
     }
   ]

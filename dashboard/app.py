@@ -11,35 +11,72 @@ API_URL = "http://localhost:8000/api"
 st.set_page_config(page_title="AI Intelligence Testing Platform", layout="wide")
 
 # Sidebar Navigation
-st.sidebar.title("🔍 Platform Navigation")
-view = st.sidebar.selectbox("Go to:", ["Executive Summary", "Performance Dashboard", "Security Analysis", "Predictive Failure"])
+st.sidebar.title("🛡️ Universal AI Hub")
+view = st.sidebar.selectbox("Go to:", ["Control Center (Scorecard)", "Interactive Code Review", "Performance Analysis", "Predictive Failure"])
 
-if view == "Executive Summary":
+# Global Data Fetch
+API_URL = "http://localhost:8000/api"
+res = {}
+try:
+    response = requests.get(f"{API_URL}/security")
+    res = response.json()
+except:
+    st.sidebar.error("⚠️ AI Backend Offline")
+
+if view == "Control Center (Scorecard)":
     st.header("🏆 Executive Intelligence Summary")
     
-    # --- UNIVERSAL HEALTH SCORE (EXECUTIVE SUMMARY) ---
-    res = {}
-    try:
-        response = requests.get(f"{API_URL}/security")
-        res = response.json()
-    except Exception as e:
-        st.error(f"❌ Could not connect to AI Backend: {e}")
-
+    # --- UNIVERSAL HEALTH SCORE ---
     if "health_scores" in res:
         hs = res["health_scores"]
-        st.markdown("### 🏆 Universal Health Score")
         col1, col2, col3 = st.columns(3)
-        col1.metric("🛡️ Security Score", f"{hs['security']}/100")
-        col2.metric("⚡ Performance Score", f"{hs['performance']}/100")
-        col3.metric("🤝 Overall Confidence", hs['confidence'])
+        col1.metric("🛡️ Security Health", f"{hs['security']}/100")
+        col2.metric("⚡ Performance Health", f"{hs['performance']}/100")
+        col3.metric("🤝 AI Confidence", hs['confidence'])
         st.progress(hs['security']/100)
-    elif res:
-        st.warning("⚠️ Health scores are missing. Please ensure you have run a full scan.")
-    
-    st.markdown("---")
-    st.write("Welcome to your **Executive Intelligence Dashboard**. This view summarizes the overall security and performance posture of your application.")
+        
+        # --- OWASP TOP 10 SCORECARD ---
+        st.markdown("---")
+        st.subheader("📋 OWASP Top 10 Compliance Scorecard")
+        if "owasp_scorecard" in res:
+            scorecard = res["owasp_scorecard"]
+            # Convert to DataFrame for display
+            df_scorecard = pd.DataFrame(list(scorecard.items()), columns=["Category", "Status"])
+            
+            # Color coding for Pass/Fail
+            def color_status(val):
+                color = 'green' if val == 'PASS' else 'red'
+                return f'color: {color}; font-weight: bold'
+            
+            st.table(df_scorecard.style.map(color_status, subset=['Status']))
+    else:
+        st.warning("⚠️ No intelligence data available. Please run a security scan.")
 
-elif view == "Performance Dashboard":
+elif view == "Interactive Code Review":
+    st.header("🔍 Security & Performance Code Review")
+    
+    if "prioritized_alerts" in res:
+        alerts = res["prioritized_alerts"]
+        
+        # Filters
+        cat = st.radio("Silo:", ["All", "Security", "Performance"], horizontal=True)
+        filtered = [a for a in alerts if cat == "All" or a.get("category").upper() == cat.upper()]
+        
+        for row in filtered:
+            icon = "🔴" if row['priority'] == "CRITICAL" else "🟠" if row['priority'] == "HIGH" else "🔵"
+            with st.expander(f"{icon} {row['priority']}: {row['alert']} ({row.get('owasp', 'N/A')})"):
+                st.markdown(f"**Location:** `{row['file']}` | **CWE:** {row['cwe']}")
+                st.info(f"**Recommendation:** {row['recommendation']}")
+                
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.error("⚠️ Vulnerable Code")
+                    st.code(row['vulnerable_code'], language='javascript')
+                with c2:
+                    st.success("✅ AI-Recommended Fix")
+                    st.code(row['fixed_code'], language='javascript')
+    else:
+        st.info("No findings to review.")
     st.header("⚡ Performance Insights")
     
     # Check if data exists
