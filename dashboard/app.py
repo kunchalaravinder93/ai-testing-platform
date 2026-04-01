@@ -10,9 +10,12 @@ API_URL = "http://localhost:8000/api"
 # Design
 st.set_page_config(page_title="AI Intelligence Testing Platform", layout="wide")
 
-# Sidebar
+# Sidebar Navigation
 st.sidebar.title("🔍 Platform Navigation")
-view = st.sidebar.radio("Go to:", ["Performance Dashboard", "Security Analysis", "Predictive Failure"])
+view = st.sidebar.selectbox("Go to:", ["Executive Summary", "Performance Dashboard", "Security Analysis", "Predictive Failure"])
+
+if view == "Executive Summary":
+    st.header("🏆 Executive Intelligence Summary")
 
 st.title("🚀 AI-Driven Testing Platform")
 st.markdown("---")
