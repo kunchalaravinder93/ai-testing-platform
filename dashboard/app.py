@@ -75,40 +75,42 @@ elif view == "Interactive Code Review":
         
         for row in filtered:
             icon = "🔴" if row['priority'] == "CRITICAL" else "🟠" if row['priority'] == "HIGH" else "🔵"
-            with st.expander(f"{icon} {row['priority']}: {row['alert']} ({row.get('owasp', 'N/A')})"):
-                st.markdown(f"**Location:** `{row['file']}` | **CWE:** {row['cwe']}")
+            source_tag = f"[{row.get('source', 'SAST')}]"
+            with st.expander(f"{icon} {row['priority']} {source_tag}: {row['alert']} ({row.get('owasp', 'N/A')})"):
+                st.markdown(f"**Source:** `{row['source']}` | **Location:** `{row['file']}` | **CWE:** {row['cwe']}")
                 st.info(f"**Recommendation:** {row['recommendation']}")
                 
                 c1, c2 = st.columns(2)
                 with c1:
-                    st.error("⚠️ Vulnerable Code")
-                    st.code(row['vulnerable_code'], language='javascript')
+                    label = "🔍 Evidence / Vulnerable Code" if row['source'] == "Semgrep (SAST)" else "🔗 Request Evidence"
+                    st.error(f"⚠️ {label}")
+                    st.code(row['vulnerable_code'], language='javascript' if row['source'] == "Semgrep (SAST)" else 'text')
                 with c2:
                     st.success("✅ AI-Recommended Fix")
                     st.code(row['fixed_code'], language='javascript')
     else:
         st.info("No findings to review.")
+
 elif view == "Performance Analysis":
     st.header("⚡ Performance Insights & Anomaly Detection")
     
-    if not os.path.exists('data/results.jtl'):
-        st.info("No load test data available. Run the pipeline to see charts.")
-    else:
-        df = pd.read_csv('data/results.jtl')
-        st.subheader("⏱️ Real-Time Latency Heatmap")
-        st.line_chart(df[['elapsed']])
+    if "endpoint_summary" in res:
+        st.subheader("⏱️ Real-Time Endpoint Performance")
+        perf_df = pd.DataFrame(res["endpoint_summary"])
+        st.dataframe(perf_df.style.highlight_max(axis=0, subset=['mean'], color='red'))
         
         st.markdown("---")
         st.subheader("🤖 AI Anomaly Analysis")
-        try:
-            perf_alerts = [a for a in res.get("prioritized_alerts", []) if a.get("category").upper() == "PERFORMANCE"]
-            if perf_alerts:
-                st.error(f"⚠️ Found {len(perf_alerts)} performance anomalies at the code level!")
-                st.dataframe(pd.DataFrame(perf_alerts)[["alert", "priority", "file"]])
-            else:
-                st.success("✅ No performance anomalies detected in source code.")
-        except Exception as e:
-            st.info("💡 Run a scan to see code-level performance insights.")
+        if "perf_anomalies" in res and res["perf_anomalies"]:
+            st.error(f"⚠️ Found {len(res['perf_anomalies'])} performance anomalies!")
+            st.table(pd.DataFrame(res["perf_anomalies"]))
+        else:
+            st.success("✅ No performance anomalies detected.")
+    elif os.path.exists('data/results.jtl'):
+        df = pd.read_csv('data/results.jtl')
+        st.line_chart(df[['elapsed']])
+    else:
+        st.info("No load test data available. Run the pipeline to see charts.")
 
 elif view == "Predictive Failure":
     st.header("🔮 AI Breaking-Point Forecast")

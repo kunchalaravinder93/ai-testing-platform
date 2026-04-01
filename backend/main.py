@@ -18,9 +18,23 @@ def get_performance_insights():
     return detect_anomalies(JTL_PATH)
 
 @app.get("/api/security")
-def get_security_insights():
-    """Returns prioritized security vulnerabilities."""
-    return prioritize_vulnerabilities("reports/sast_report.json")
+async def get_security_report():
+    # Real scan files from pipeline
+    sast_file = "reports/scan_results.json"
+    dast_file = "reports/zap_report.json"
+    jtl_file = "data/results.jtl"
+    
+    # AI Analysis
+    security_data = prioritize_vulnerabilities(sast_file, dast_file)
+    performance_data = detect_anomalies(jtl_file)
+    
+    # Merge results
+    if "error" not in performance_data:
+        security_data["health_scores"]["performance"] = 100 - (performance_data.get("anomaly_count", 0) * 10)
+        security_data["perf_anomalies"] = performance_data.get("anomalies", [])
+        security_data["endpoint_summary"] = performance_data.get("endpoint_summary", [])
+        
+    return security_data
 
 @app.post("/api/predict")
 def get_prediction(threshold: int = 1000):
