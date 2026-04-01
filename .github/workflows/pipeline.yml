@@ -43,23 +43,29 @@ jobs:
           python ai_engine/prediction.py
           python ai_engine/vuln_prioritizer.py
 
+      - name: Validate Secrets
+        run: |
+          if [ -z "${{ secrets.EC2_HOST }}" ]; then echo "❌ ERROR: EC2_HOST secret is missing!"; exit 1; fi
+          if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then echo "❌ ERROR: EC2_SSH_KEY secret is missing!"; exit 1; fi
+          echo "✅ Secrets are present."
+
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           printf "%s\n" "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Ensure EC2 Directories Exist
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/ai-testing-platform/data /home/ubuntu/ai-testing-platform/reports"
+          ssh -i ~/.ssh/id_rsa ubuntu@"${{ secrets.EC2_HOST }}" "mkdir -p /home/ubuntu/ai-testing-platform/data /home/ubuntu/ai-testing-platform/reports"
 
       - name: Upload Results to EC2
         run: |
           echo "Uploading data/results.jtl..."
-          scp -i ~/.ssh/id_rsa data/results.jtl ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ai-testing-platform/data/
+          scp -i ~/.ssh/id_rsa data/results.jtl ubuntu@"${{ secrets.EC2_HOST }}":/home/ubuntu/ai-testing-platform/data/
           
           echo "Uploading reports/zap_report.json..."
-          scp -i ~/.ssh/id_rsa reports/zap_report.json ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/ai-testing-platform/reports/
+          scp -i ~/.ssh/id_rsa reports/zap_report.json ubuntu@"${{ secrets.EC2_HOST }}":/home/ubuntu/ai-testing-platform/reports/
           
           echo "✅ All results synced to EC2 Dashboard!"
