@@ -111,7 +111,7 @@ def prioritize_vulnerabilities(sast_file):
         }
 
         # Scorecard Silos
-        owasp_scorecard = { f"A{i:02}:2021": "PASS" for i in range(1, 11) }
+        owasp_scorecard = { FIX_KB[key]["owasp"]: "PASS" for key in FIX_KB if "A" in key }
         perf_scorecard = { "Scalability": "PASS", "Efficiency": "PASS", "Stability": "PASS" }
 
         for issue in results:
@@ -124,11 +124,11 @@ def prioritize_vulnerabilities(sast_file):
             for key in FIX_KB:
                 if key.lower() in check_id.lower():
                     vuln_type = key
-                    owasp_id = FIX_KB[key].get("owasp", "N/A").split(" - ")[0] # Just the ID for scorecard
+                    full_owasp = FIX_KB[key].get("owasp", "N/A")
                     
                     # Security Logic
-                    if severity in ["ERROR", "WARNING"] and owasp_id in owasp_scorecard:
-                        owasp_scorecard[owasp_id] = "FAIL"
+                    if severity in ["ERROR", "WARNING"] and full_owasp in owasp_scorecard:
+                        owasp_scorecard[full_owasp] = "FAIL"
                     
                     # Performance Logic
                     if "performance" in check_id.lower() and severity in ["ERROR", "WARNING"]:
@@ -166,7 +166,7 @@ def prioritize_vulnerabilities(sast_file):
             "health_scores": {
                 "security": max(0, security_score),
                 "performance": max(0, performance_score),
-                "confidence": "HIGH" if len(results) > 10 else "MEDIUM"
+                "fidelity": "ESTABLISHED" if len(results) > 10 else "PRELIMINARY"
             },
             "owasp_scorecard": owasp_scorecard,
             "perf_scorecard": perf_scorecard

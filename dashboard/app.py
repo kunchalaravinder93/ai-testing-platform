@@ -37,7 +37,7 @@ if view == "Control Center (Scorecard)":
         col1, col2, col3 = st.columns(3)
         col1.metric("🛡️ Security Health", f"{hs['security']}/100")
         col2.metric("⚡ Performance Health", f"{hs['performance']}/100")
-        col3.metric("🤝 AI Confidence", hs['confidence'])
+        col3.metric("🤝 Intelligence Fidelity", hs['fidelity'])
         st.progress(hs['security']/100)
         
         # --- COMPLIANCE SCORECARDS ---
