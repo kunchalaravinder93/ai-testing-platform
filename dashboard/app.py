@@ -63,6 +63,8 @@ elif view == "Security Analysis":
             if "prioritized_alerts" in res:
                 # Detailed Code Review Expanders
                 st.subheader("🔍 AI Security Code Review")
+                alert_df = pd.DataFrame(res["prioritized_alerts"])
+                
                 for _, row in alert_df.iterrows():
                     with st.expander(f"🔴 {row['priority']}: {row['alert']} (CWE: {row['cwe']})"):
                         st.markdown(f"**File:** `{row['file']}`")
