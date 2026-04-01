@@ -43,19 +43,25 @@ if view == "Performance Dashboard":
         st.line_chart(df[['elapsed']])
         
         # AI Findings from Backend
-        st.subheader("🤖 AI Findings (Anomalies)")
+        # Fetch data
+        res = {}
         try:
-            res = requests.get(f"{API_URL}/performance").json()
-            if "anomalies" in res and res["anomalies"]:
-                anomalies_df = pd.DataFrame(res["anomalies"])
-                st.error(f"⚠️ Found {len(anomalies_df)} anomalies!")
-                st.dataframe(anomalies_df)
-            else:
-                st.success("✅ No performance anomalies detected.")
-        except:
-            st.info("💡 Backend not running - showing limited view.")
+            response = requests.get(f"{API_URL}/security")
+            res = response.json()
+        except Exception as e:
+            st.error(f"❌ Could not connect to AI Backend: {e}")
 
-        # Detailed Performance Code Review
+        if "health_scores" in res:
+            hs = res["health_scores"]
+            st.markdown("### 🏆 Universal Health Score")
+            col1, col2, col3 = st.columns(3)
+            col1.metric("🛡️ Security Score", f"{hs['security']}/100")
+            col2.metric("⚡ Performance Score", f"{hs['performance']}/100")
+            col3.metric("🤝 Overall Confidence", hs['confidence'])
+            st.progress(hs['security']/100)
+        elif res:
+            st.warning("⚠️ Health scores are missing from the AI results. Please ensure you have run a full pipeline scan recently.")
+        
         st.markdown("---")
         st.subheader("⚡ AI Performance Code Review")
         try:
