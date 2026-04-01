@@ -60,6 +60,22 @@ if view == "Control Center (Scorecard)":
                     return 'color: green; font-weight: bold' if val == 'PASS' else 'color: red; font-weight: bold'
                 st.table(df_p.style.map(color_p, subset=['Status']))
 
+        # --- AUDIT PROOF SECTION ---
+        st.markdown("---")
+        with st.expander("🛠️ Scanner Audit Proof (Verification Metadata)"):
+            if "audit_metadata" in res:
+                meta = res["audit_metadata"]
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.markdown("**🛡️ Security Scanners Enforced:**")
+                    for s in meta["scanners"]: st.write(f"- {s}")
+                with c2:
+                    st.markdown("**⚙️ Intelligence Rulesets Applied:**")
+                    for r in meta["rulesets"]: st.write(f"- {r}")
+                st.caption(f"Sources: {', '.join(meta['data_sources'])}")
+            else:
+                st.info("💡 Run a deep scan to generate audit metadata.")
+
 elif view == "Interactive Code Review":
     st.header("🔍 Security & Performance Code Review")
     

@@ -31,8 +31,8 @@ jobs:
 
       - name: Run SAST Security Scan (Semgrep)
         run: |
-          echo "Running Full OWASP Top 10 Security Scan..."
-          semgrep scan --config auto --json --output reports/scan_results.json || true
+          echo "Running High-Depth OWASP & Security Audit..."
+          semgrep scan --config p/owasp-top-ten --config p/security-audit --config p/secrets --config p/cwe-top-25 --json --output reports/scan_results.json || true
 
       - name: Run DAST Security Awareness (Mock ZAP Output)
         run: |

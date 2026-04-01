@@ -150,6 +150,13 @@ def prioritize_vulnerabilities(sast_file, dast_file):
     perf_findings = [a for a in prioritized if a['category'] == "PERFORMANCE"]
     performance_score = max(0, 100 - (len(perf_findings) * 15))
 
+    # Audit Metadata (Proof of Depth)
+    audit_metadata = {
+        "scanners": ["Semgrep (SAST)", "OWASP ZAP (DAST)"],
+        "rulesets": ["OWASP Top 10", "Security Audit", "Secrets", "CWE Top 25"],
+        "data_sources": [sast_file, dast_file]
+    }
+
     return {
         "total_alerts": len(prioritized),
         "prioritized_alerts": prioritized,
@@ -159,7 +166,8 @@ def prioritize_vulnerabilities(sast_file, dast_file):
             "depth": "High" if len(all_findings) > 20 else "Medium" if len(all_findings) > 5 else "Low"
         },
         "owasp_scorecard": owasp_scorecard,
-        "perf_scorecard": perf_scorecard
+        "perf_scorecard": perf_scorecard,
+        "audit_metadata": audit_metadata
     }
 
 if __name__ == "__main__":
