@@ -20,7 +20,7 @@ def get_performance_insights():
 @app.get("/api/security")
 def get_security_insights():
     """Returns prioritized security vulnerabilities."""
-    return prioritize_vulnerabilities(ZAP_PATH)
+    return prioritize_vulnerabilities("reports/sast_report.json")
 
 @app.post("/api/predict")
 def get_prediction(threshold: int = 1000):
