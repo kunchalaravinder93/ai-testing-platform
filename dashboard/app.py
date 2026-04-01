@@ -40,14 +40,25 @@ if view == "Control Center (Scorecard)":
         col3.metric("🤝 AI Confidence", hs['confidence'])
         st.progress(hs['security']/100)
         
-        # --- OWASP TOP 10 SCORECARD ---
+        # --- COMPLIANCE SCORECARDS ---
         st.markdown("---")
-        st.subheader("📋 OWASP Top 10 Compliance Scorecard")
-        if "owasp_scorecard" in res:
-            df_scorecard = pd.DataFrame(list(res["owasp_scorecard"].items()), columns=["Category", "Status"])
-            def color_status(val):
-                return 'color: green; font-weight: bold' if val == 'PASS' else 'color: red; font-weight: bold'
-            st.table(df_scorecard.style.map(color_status, subset=['Status']))
+        col_sec, col_perf = st.columns(2)
+        
+        with col_sec:
+            st.subheader("📋 OWASP Top 10 (Security)")
+            if "owasp_scorecard" in res:
+                df_s = pd.DataFrame(list(res["owasp_scorecard"].items()), columns=["Category", "Status"])
+                def color_s(val):
+                    return 'color: green; font-weight: bold' if val == 'PASS' else 'color: red; font-weight: bold'
+                st.table(df_s.style.map(color_s, subset=['Status']))
+
+        with col_perf:
+            st.subheader("⚙️ Reliability (Performance)")
+            if "perf_scorecard" in res:
+                df_p = pd.DataFrame(list(res["perf_scorecard"].items()), columns=["Metric", "Status"])
+                def color_p(val):
+                    return 'color: green; font-weight: bold' if val == 'PASS' else 'color: red; font-weight: bold'
+                st.table(df_p.style.map(color_p, subset=['Status']))
 
 elif view == "Interactive Code Review":
     st.header("🔍 Security & Performance Code Review")

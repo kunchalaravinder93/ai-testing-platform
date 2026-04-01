@@ -123,14 +123,69 @@
       }
     },
     {
-      "check_id": "javascript.express.performance.audit.blocking-loop",
-      "path": "utils/processor.js",
+      "check_id": "javascript.express.performance.audit.n-plus-one",
+      "path": "controllers/productController.js",
       "start": { "line": 88, "col": 1 },
       "extra": {
-        "message": "Performance - Synchronous loop over large dataset blocks the event loop.",
+        "message": "Performance - N+1 Query detected. Products are being fetched in a loop instead of a join.",
+        "severity": "ERROR",
+        "lines": "products.map(p => db.query('SELECT * FROM reviews WHERE p_id = ?', [p.id]))",
+        "metadata": { "cwe": "CWE-1070", "owasp": "Performance" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.large-serialization",
+      "path": "utils/api_helper.js",
+      "start": { "line": 150, "col": 1 },
+      "extra": {
+        "message": "Performance - Large object serialization in the main thread. This will block event loop.",
         "severity": "WARNING",
-        "lines": "data.forEach(item => { heavySyncProcess(item); });",
+        "lines": "res.json(large_dataset.filter(x => x.active));",
         "metadata": { "cwe": "CWE-834", "owasp": "Performance" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.redos",
+      "path": "utils/validator.js",
+      "start": { "line": 42, "col": 1 },
+      "extra": {
+        "message": "Performance/Security - Potential ReDoS (Regex Denial of Service) in input validation.",
+        "severity": "ERROR",
+        "lines": "const regex = /([a-z]+)+$/; regex.test(userInput);",
+        "metadata": { "cwe": "CWE-1333", "owasp": "A04:2021" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.database-pooling-exhaustion",
+      "path": "db.js",
+      "start": { "line": 5, "col": 1 },
+      "extra": {
+        "message": "Performance - Database pool size too small (5) for high concurrency. Request queuing detected.",
+        "severity": "ERROR",
+        "lines": "const pool = mysql.createPool({ connectionLimit: 5 });",
+        "metadata": { "cwe": "CWE-772", "owasp": "Performance" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.synchronous-fs",
+      "path": "utils/logger.js",
+      "start": { "line": 22, "col": 1 },
+      "extra": {
+        "message": "Performance - Synchronous file system call (fs.writeFileSync) blocks the event loop.",
+        "severity": "WARNING",
+        "lines": "fs.writeFileSync('/tmp/log.txt', data);",
+        "metadata": { "cwe": "CWE-404", "owasp": "Performance" }
+      }
+    },
+    {
+      "check_id": "javascript.express.performance.audit.excessive-logging",
+      "path": "middleware/auth.js",
+      "start": { "line": 10, "col": 1 },
+      "extra": {
+        "message": "Performance - Excessive debug logging in production path causes high disk I/O.",
+        "severity": "INFO",
+        "lines": "console.log('DEBUG: User object:', JSON.stringify(req.user, null, 2));",
+        "metadata": { "cwe": "CWE-778", "owasp": "Performance" }
       }
     }
   ]
