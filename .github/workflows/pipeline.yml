@@ -63,7 +63,7 @@ jobs:
           echo "Uploading data/results.jtl..."
           scp -i ~/.ssh/id_rsa data/results.jtl ubuntu@"${{ secrets.EC2_HOST }}":/home/ubuntu/ai-testing-platform/data/
           
-          echo "Uploading reports/zap_report.json..."
-          scp -i ~/.ssh/id_rsa reports/zap_report.json ubuntu@"${{ secrets.EC2_HOST }}":/home/ubuntu/ai-testing-platform/reports/
+          echo "Uploading reports/sast_report.json..."
+          scp -i ~/.ssh/id_rsa reports/sast_report.json ubuntu@"${{ secrets.EC2_HOST }}":/home/ubuntu/ai-testing-platform/reports/
           
           echo "✅ All results synced to EC2 Dashboard!"
